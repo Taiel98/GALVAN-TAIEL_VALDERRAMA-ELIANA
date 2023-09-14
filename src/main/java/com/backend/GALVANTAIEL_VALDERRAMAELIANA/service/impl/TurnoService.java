@@ -17,12 +17,14 @@ import com.backend.GALVANTAIEL_VALDERRAMAELIANA.service.ITurnoService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Service
 public class TurnoService implements ITurnoService{
 
+    private final Logger LOGGER = LoggerFactory.getLogger(TurnoService.class);
     private final TurnoRepository turnoRepository;
     private final ModelMapper modelMapper;
     private final OdontologoService odontologoService;
@@ -48,23 +50,27 @@ public class TurnoService implements ITurnoService{
 
         if (paciente == null || odontologo == null) {
             if (paciente == null && odontologo == null) {
+                LOGGER.error("El paciente y el odontologo no se encuentran en nuestra base de datos");
                 throw new BadRequestException("El paciente y el odontologo no se encuentran en nuestra base de datos");
             } else if (paciente == null) {
+                LOGGER.error(pacienteNoEnBdd);
                 throw new BadRequestException(pacienteNoEnBdd);
             } else {
+                LOGGER.error(odontologoNoEnBdd);
                 throw new BadRequestException(odontologoNoEnBdd);
             }
         } else {
             Turno turnoNuevo = turnoRepository.save(modelMapper.map(turnoEntradaDto, Turno.class));
             turnoSalidaDto = entidadADto(turnoNuevo);
+            LOGGER.info("Nuevo turno registrado con exito: {}", turnoSalidaDto);
         }
-
         return turnoSalidaDto;
     }
 
     @Override
     public List<TurnoSalidaDto> listarTurnos() {
         List<TurnoSalidaDto> turnos = turnoRepository.findAll().stream().map(this::entidadADto).toList();
+        LOGGER.info("Listado de todos los turnos: {}", turnos);
         return turnos;
     }
 
@@ -75,7 +81,8 @@ public class TurnoService implements ITurnoService{
         TurnoSalidaDto turnoSalidaDto = null;
         if (turnoBuscado != null) {
             turnoSalidaDto = entidadADto(turnoBuscado);
-        }
+            LOGGER.info("Turno encontrado: {}", turnoSalidaDto);
+        } else LOGGER.error("El id no se encuentra registrado en la base de datos");
         return turnoSalidaDto;
     }
 
@@ -83,7 +90,9 @@ public class TurnoService implements ITurnoService{
     public void eliminarTurno(Long id) throws ResourceNotFoundException {
         if (buscarTurnoPorId(id) != null) {
             turnoRepository.deleteById(id);
+            LOGGER.warn("Se ha eliminado el turno con id: {}", id);
         } else {
+            LOGGER.error("No se ha encontrado el turno con id {}", id);
             throw new ResourceNotFoundException("No se ha encontrado el turno con id " + id);
         }
     }
@@ -98,10 +107,10 @@ public class TurnoService implements ITurnoService{
             turnoAActualizar.setOdontologo(modelMapper.map(odontologoService.buscarOdontologoPorId(turnoModificacionEntradaDto.getIdOdontologo()), Odontologo.class));
             turnoAActualizar.setFechaYHora(turnoModificacionEntradaDto.getFechaYHora());
             turnoRepository.save(turnoAActualizar);
-
             turnoSalidaDto = entidadADto(turnoAActualizar);
-
+            LOGGER.warn("Turno actualizado: {}", turnoSalidaDto);
         } else {
+            LOGGER.error("No fue posible actualizar los datos ya que el turno no se encuentra registrado");
             throw new ResourceNotFoundException("No fue posible actualizar los datos ya que el turno no se encuentra registrado");
         }
         return turnoSalidaDto;

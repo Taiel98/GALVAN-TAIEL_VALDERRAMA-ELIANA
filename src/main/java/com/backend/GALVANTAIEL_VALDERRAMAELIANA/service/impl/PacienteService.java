@@ -9,12 +9,14 @@ import com.backend.GALVANTAIEL_VALDERRAMAELIANA.repository.PacienteRepository;
 import com.backend.GALVANTAIEL_VALDERRAMAELIANA.service.IPacienteService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Service
 public class PacienteService implements IPacienteService{
 
+    private final Logger LOGGER = LoggerFactory.getLogger(PacienteService.class);
     private final PacienteRepository pacienteRepository;
     private final ModelMapper modelMapper;
 
@@ -28,6 +30,7 @@ public class PacienteService implements IPacienteService{
     public List<PacienteSalidaDto> listarPacinetes() {
         List<PacienteSalidaDto> pacientes = pacienteRepository.findAll().stream()
                 .map(this::entidadADtoSalida).toList();
+        LOGGER.info("Listado de todos los pacientes: {}", pacientes);
         return pacientes;
     }
 
@@ -35,17 +38,18 @@ public class PacienteService implements IPacienteService{
     public PacienteSalidaDto registrarPaciente(PacienteEntradaDto paciente) {
         Paciente pacGuardado = pacienteRepository.save(dtoEntradaAEntidad(paciente));
         PacienteSalidaDto pacienteSalidaDto = entidadADtoSalida(pacGuardado);
+        LOGGER.info("Paciente registrado: {}", pacienteSalidaDto);
         return pacienteSalidaDto;
     }
 
     @Override
     public PacienteSalidaDto buscarPacientePorId(Long id) {
         Paciente pacienteBuscado = pacienteRepository.findById(id).orElse(null);
-
         PacienteSalidaDto pacienteSalidaDto = null;
         if (pacienteBuscado != null) {
             pacienteSalidaDto = entidadADtoSalida(pacienteBuscado);
-        }
+            LOGGER.info("Paciente encontrado: {}", pacienteSalidaDto);
+        } else LOGGER.error("El id no se encuentra en la base de datos");
         return pacienteSalidaDto;
     }
 
@@ -53,8 +57,10 @@ public class PacienteService implements IPacienteService{
     public void eliminarPaciente(Long id) throws ResourceNotFoundException {
         if (buscarPacientePorId(id) != null) {
             pacienteRepository.deleteById(id);
+            LOGGER.warn("Se ha eliminado el paciente con id: {}", id);
         } else {
-            throw new ResourceNotFoundException("No se ha encontrado el paciente con id " + id);
+            LOGGER.error("No fue encontrado el paciente con id {}", id);
+            throw new ResourceNotFoundException("No fue encontrado el paciente con id " + id);
         }
     }
 
@@ -67,8 +73,10 @@ public class PacienteService implements IPacienteService{
             pacienteAActualizar = pacienteRecibido;
             pacienteRepository.save(pacienteAActualizar);
             pacienteSalidaDto = entidadADtoSalida(pacienteAActualizar);
+            LOGGER.warn("Paciente actualizado: {}", pacienteSalidaDto);
         } else {
-            throw new ResourceNotFoundException("No fue posible actualizar los datos ya que el paciente no se encuentra registrado");
+            LOGGER.error("No fue posible actualizar los datos porque el paciente no esta registrado");
+            throw new ResourceNotFoundException("No fue posible actualizar los datos porque el paciente no esta registrado");
         }
 
 
