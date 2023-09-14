@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>aaaa</title>
+    <title>Odontologos</title>
+    <script src="odontologos.js"></script>
 </head>
 <body>
-    <h2>Mi clinica</h2>
-    <a href="odontologos.html">odontologos</a>
-
-
+<h1>Mi Clinica</h1>
+<h2>Registrar Odontologo</h2>
+<form action="#" th:action="@{/odontologos/registrar}" method="post">
+    <label for="matricula">Matricula</label><br>
+    <input type="number" th:field="*{matricula}" id="matricula" name="matricula"> <br>
+    <label for="nombre">Nombre</label><br>
+    <input type="text" th:field="*{nombre}" id="nombre" name="nombre"> <br>
+    <label for="apellido">Apellido</label><br>
+    <input type="text" th:field="*{apellido}" id="apellido" name="apellido"> <br>
+    <input type="submit" value="Registrar">
+</form>
+<br>
+<h2></h2>
 </body>
 </html>
